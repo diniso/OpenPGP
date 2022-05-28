@@ -2,7 +2,8 @@ package etf.openpgp.su182095dvv180421d;
 
 import etf.openpgp.su182095dvv180421d.model.AsymetricKeyGenerator;
 import etf.openpgp.su182095dvv180421d.model.RsaUtil;
-import etf.openpgp.su182095dvv180421d.views.PublicKeyRingView;
+import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingAddView;
+import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingView;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,6 @@ public class MainFrame extends JFrame {
         MainFrame mainFrame = new MainFrame();
         JTabbedPane jTabbedPane = new JTabbedPane();
 
-        mainFrame.add(jTabbedPane);
         mainFrame.setTitle("Zastita podatak - Open PGP");
         Dimension size = Toolkit.getDefaultToolkit().getScreenSize();
         mainFrame.setBounds(
@@ -29,8 +29,11 @@ public class MainFrame extends JFrame {
                 Config.FRAME_HEIGHT);
         mainFrame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        jTabbedPane.addTab("Pregled prstena javnih kljuceva", new PublicKeyRingView());
+        jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView());
+        jTabbedPane.addTab("Dodovanje u prsten privatnih kljuceva", new PrivateKeyRingAddView());
 
+
+        mainFrame.add(jTabbedPane);
         mainFrame.setVisible(true);
 
         KeyPair keyPair = AsymetricKeyGenerator.generate(AsymetricKeyGenerator.BlockSize.BLOCK_1024);

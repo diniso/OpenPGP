@@ -1,5 +1,6 @@
 package etf.openpgp.su182095dvv180421d.model;
 
-public interface KeyRing {
-    Key getKey(long keyId);
+import java.io.Serializable;
+
+public interface KeyRing extends Serializable {
 }
