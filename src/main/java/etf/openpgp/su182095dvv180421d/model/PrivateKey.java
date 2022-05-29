@@ -1,68 +1,65 @@
 package etf.openpgp.su182095dvv180421d.model;
 
-public class PrivateKey implements Key {
-    int timeStamp;
-    long keyId;
-    byte[] publicKey;
-    byte[] encryptedPrivateKey; // encrypted with the hash of the password
-    String userId; // it's typically email, so it represented as the string
+import java.util.Date;
 
-    public PrivateKey(int timeStamp, long keyId, byte[] publicKey, byte[] encryptedPrivateKey, String userId) {
-        this.setTimeStamp(timeStamp);
-        this.keyId = keyId;
+public class PrivateKey implements Key {
+    private long timeStamp;
+    private byte[] keyId;
+    private byte[] publicKey;
+    private byte[] encryptedPrivateKey; // encrypted with the hash of the password
+    private String userId; // it's typically email, so it represented as the string
+
+    public PrivateKey(byte[] publicKey, byte[] encryptedPrivateKey, String userId) {
         this.setPublicKey(publicKey);
         this.setEncryptedPrivateKey(encryptedPrivateKey);
-        this.setUserId(userId);
+        this.setKeyId(publicKey);
+        this.userId = userId;
+        this.timeStamp = new Date().getTime();
     }
 
-    public int getTimeStamp() {
+    // getters
+
+    public long getTimeStamp() {
         return timeStamp;
-    }
-
-    public void setTimeStamp(int timeStamp) {
-        if (timeStamp < 0) {
-            throw new IllegalArgumentException("Timestamp must be non negative number");
-        }
-        this.timeStamp = timeStamp;
-    }
-
-    public long getKeyId() {
-        return keyId;
-    }
-
-    public void setKeyId(long keyId) {
-        this.keyId = keyId;
-    }
-
-    public byte[] getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(byte[] publicKey) {
-        if (publicKey == null) {
-            throw new IllegalArgumentException("Encrypted private key must be not null");
-        }
-        this.publicKey = publicKey;
-    }
-
-    public byte[] getEncryptedPrivateKey() {
-        return encryptedPrivateKey;
-    }
-
-    public void setEncryptedPrivateKey(byte[] encryptedPrivateKey) {
-        if (encryptedPrivateKey == null) {
-            throw new IllegalArgumentException("Encrypted private key must be not null");
-        }
-        this.encryptedPrivateKey = encryptedPrivateKey;
     }
 
     public String getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public byte[] getKeyId() {return keyId;}
+
+    public byte[] getPublicKey() {
+        return publicKey;
     }
+
+    public byte[] getEncryptedPrivateKey() {
+        return encryptedPrivateKey;
+    }
+
+    // setters
+
+    private void setPublicKey(byte[] publicKey) {
+        if (publicKey == null) {
+            throw new IllegalArgumentException("Public key must be not null");
+        }
+        this.publicKey = publicKey;
+    }
+
+    private void setEncryptedPrivateKey(byte[] encryptedPrivateKey) {
+        if (encryptedPrivateKey == null) {
+            throw new IllegalArgumentException("Encrypted private key must be not null");
+        }
+        this.encryptedPrivateKey = encryptedPrivateKey;
+    }
+
+    private void setKeyId(byte[] publicKey) {
+        this.keyId = new byte[8];
+        for (int i = 0 ; i < 8 ; i++)
+            keyId[i] = publicKey[publicKey.length-8+i];
+    }
+
+    // For export
 
     @Override
     public byte[] getSerialized() {
