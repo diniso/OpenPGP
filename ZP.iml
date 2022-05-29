@@ -12,5 +12,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk18on:1.71" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcpg-jdk18on:1.71" level="project" />
+    <orderEntry type="library" name="Maven: com.formdev:flatlaf:2.3" level="project" />
   </component>
 </module>
