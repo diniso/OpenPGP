@@ -10,14 +10,15 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.util.encoders.Base64;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 public class Utils {
     public static String getPGPPublicKeyIdBase64(PGPPublicKey publicKey) {
-        return Base64.toBase64String(BigInteger.valueOf(publicKey.getKeyID()).toByteArray());
+        return new BigInteger(Long.toUnsignedString(publicKey.getKeyID()), 10).toString(16).toUpperCase(Locale.ROOT);
     }
 
     public static String getPGPPrivateKeyIdBase64(PGPSecretKey secretKey) {
-        return Base64.toBase64String(BigInteger.valueOf(secretKey.getKeyID()).toByteArray());
+        return new BigInteger(Long.toUnsignedString(secretKey.getKeyID()), 10).toString(16).toUpperCase(Locale.ROOT);
     }
 
     public static PGPPrivateKey decryptSecretKey(PGPSecretKey secretKey, String password) throws PGPException {
