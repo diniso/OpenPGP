@@ -1,36 +1,41 @@
 package etf.openpgp.su182095dvv180421d.model;
 
 import etf.openpgp.su182095dvv180421d.Config;
+import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 
 import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrivateKeyRing implements KeyRing {
+public class PrivateKeyRing extends KeyRing<PGPSecretKey> {
 
-    List<PrivateKey> privateKeys = new ArrayList<>();
+    List<PGPSecretKey> privateKeys = new ArrayList<>();
 
-    public PrivateKey getKey(byte[] keyId) {
-        for (PrivateKey pk: privateKeys) {
-            if (pk.getKeyId().equals(keyId)) return pk;
+    public PGPSecretKey getKey(long keyId) {
+        for (PGPSecretKey pk: privateKeys) {
+            if (pk.getKeyID() == keyId) return pk;
         }
         return null;
     }
 
-    public List<PrivateKey> getAllKeys() {
+    public List<PGPSecretKey> getAllKeys() {
         return privateKeys;
     }
 
-    public void addKey(PrivateKey key) {
+    public void addKey(PGPSecretKey key) {
         this.privateKeys.add(key);
+        notifyObservers(privateKeys);
     }
 
-    public void removeKey(PrivateKey key) {
+    public void removeKey(PGPSecretKey key) {
         this.privateKeys.remove(key);
+        notifyObservers(privateKeys);
     }
 
     public void removeKey(int index) {
         privateKeys.remove(index);
+        notifyObservers(privateKeys);
     }
 
     private void loadData(String filename) {
@@ -53,7 +58,8 @@ public class PrivateKeyRing implements KeyRing {
 
         for (int i = 0 ; i < 50 ; i++) {
             KeyPair kp = AsymetricKeyGenerator.generate(AsymetricKeyGenerator.BlockSize.BLOCK_1024);
-            singleton.privateKeys.add(new PrivateKey(kp.getPublic().getEncoded(), kp.getPrivate().getEncoded(), "Vlade"));
+//            new PGPSecretKey()
+//            singleton.privateKeys.add(new PrivateKey(kp.getPublic().getEncoded(), kp.getPrivate().getEncoded(), "Vlade"));
         }
         return singleton;
     }

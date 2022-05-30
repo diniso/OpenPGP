@@ -1,6 +1,22 @@
 package etf.openpgp.su182095dvv180421d.model;
 
-import java.io.Serializable;
+import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingView;
 
-public interface KeyRing extends Serializable {
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class KeyRing<T> {
+
+    ArrayList<Observer<List<T>>> observers = new ArrayList<>();
+
+    public void addObserver(Observer<List<T>> observer) {
+        observers.add(observer);
+    }
+
+    protected void notifyObservers(List<T> keys) {
+        for (Observer<List<T>> observer:observers) {
+            observer.observableChanged(keys);
+        }
+    }
 }
