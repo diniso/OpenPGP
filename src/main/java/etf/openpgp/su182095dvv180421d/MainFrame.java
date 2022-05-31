@@ -1,23 +1,18 @@
 package etf.openpgp.su182095dvv180421d;
 
-import com.formdev.flatlaf.FlatLightLaf;
-import etf.openpgp.su182095dvv180421d.model.AsymetricKeyGenerator;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
 import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
-import etf.openpgp.su182095dvv180421d.model.RsaUtil;
+import etf.openpgp.su182095dvv180421d.views.KeyGenerate;
 import etf.openpgp.su182095dvv180421d.views.KeysStoreLoad;
-//import etf.openpgp.su182095dvv180421d.views.PublicKeyRingView;
-import org.bouncycastle.openpgp.*;
 import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingAddView;
 import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingView;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPSecretKey;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
-import java.security.KeyPair;
 import java.security.Security;
-import java.util.LinkedList;
-import java.util.List;
 
 public class MainFrame extends JFrame {
 
@@ -38,30 +33,20 @@ public class MainFrame extends JFrame {
 
         jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView());
         jTabbedPane.addTab("Dodovanje u prsten privatnih kljuceva", new PrivateKeyRingAddView());
-//        jTabbedPane.addTab("Pregled prstena javnih kljuceva", new PublicKeyRingView());
-        jTabbedPane.addTab("Uvoz i izvoz kljuceva", new KeysStoreLoad(
+
+        JPanel keysLoadStoreGenerate = new JPanel(new GridLayout(1, 2));
+        keysLoadStoreGenerate.add(new KeysStoreLoad(
                 publicKey -> PublicKeyRing.getInstance().addKey(publicKey),
                 secretKey -> PrivateKeyRing.getInstance().addKey(secretKey),
                 () -> PublicKeyRing.getInstance().getAllKeys().toArray(new PGPPublicKey[0]),
                 () -> PrivateKeyRing.getInstance().getAllKeys().toArray(new PGPSecretKey[0])
         ));
-
-        KeyPair keyPair = AsymetricKeyGenerator.generate(AsymetricKeyGenerator.BlockSize.BLOCK_1024);
-
-        String cipher = RsaUtil.encrypt(
-                keyPair.getPublic().getEncoded(),
-                "hello");
-
-        String original = RsaUtil.decrypt(
-                keyPair.getPrivate().getEncoded(),
-                cipher);
-
-        System.out.println(cipher);
-        System.out.println(original);
+        keysLoadStoreGenerate.add(new KeyGenerate());
+        jTabbedPane.addTab("Manipulisanje kljucevima", keysLoadStoreGenerate);
     }
 
     public static void main(String[] args) {
-        FlatLightLaf.setup();
+        FlatDarculaLaf.setup();
 
         new MainFrame().setVisible(true);
     }

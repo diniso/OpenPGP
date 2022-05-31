@@ -6,4 +6,7 @@ public class Config {
 
     public static final String privateKeyRingFile = "";
     public static final String publicKeyRingFile = "";
+
+    public static final int S2K_ITERATION_COUNT = 50;
+    public static final int CERTAINITY = 5;
 }
