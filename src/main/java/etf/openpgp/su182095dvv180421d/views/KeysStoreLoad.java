@@ -1,6 +1,6 @@
 package etf.openpgp.su182095dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.Callback;
+import etf.openpgp.su182095dvv180421d.model.*;
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.*;
 import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
@@ -12,6 +12,7 @@ import java.awt.event.ItemEvent;
 import java.io.*;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class KeysStoreLoad extends JPanel {
@@ -27,9 +28,9 @@ public class KeysStoreLoad extends JPanel {
         public String toString() {
             Iterator<String> userIDs = pgpSecretKey.getUserIDs();
             if (userIDs.hasNext()) {
-                return "ID: %s, Korisnik: %s".formatted(pgpSecretKey.getKeyID(), userIDs.next());
+                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPrivateKeyIdBase64(pgpSecretKey), userIDs.next());
             }
-            return "ID: %s".formatted(pgpSecretKey.getKeyID());
+            return "ID: %s".formatted(Utils.getPGPPrivateKeyIdBase64(pgpSecretKey));
         }
     }
 
@@ -44,9 +45,9 @@ public class KeysStoreLoad extends JPanel {
         public String toString() {
             Iterator<String> userIDs = pgpPublicKey.getUserIDs();
             if (userIDs.hasNext()) {
-                return "ID: %s, Korisnik: %s".formatted(pgpPublicKey.getKeyID(), userIDs.next());
+                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey), userIDs.next());
             }
-            return "ID: %s".formatted(pgpPublicKey.getKeyID());
+            return "ID: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey));
         }
     }
 
@@ -55,15 +56,16 @@ public class KeysStoreLoad extends JPanel {
 
         JPanel centerPanel = new JPanel(new GridLayout(2, 1));
 
-        JPanel privateOrPublicKeyChoosePanel = new JPanel();
+        JPanel privateOrPublicKeyChoosePanel = new JPanel(new GridLayout(2, 1));
         privateOrPublicKeyChoosePanel.setBorder(new TitledBorder("Vrsta kljuca"));
         JRadioButton publicKeyRB = new JRadioButton("Javni kljuc", true);
         JRadioButton privateKeyRB = new JRadioButton("Privatni kljuc");
         ButtonGroup publicPrivateKeyRGB = new ButtonGroup();
         publicPrivateKeyRGB.add(publicKeyRB);
         publicPrivateKeyRGB.add(privateKeyRB);
-        privateOrPublicKeyChoosePanel.add(publicKeyRB);
-        privateOrPublicKeyChoosePanel.add(privateKeyRB);
+        privateOrPublicKeyChoosePanel.add(Utils.wrapComponentToLayout(publicKeyRB, new FlowLayout(FlowLayout.CENTER)));
+        privateOrPublicKeyChoosePanel.add(Utils.wrapComponentToLayout(privateKeyRB, new FlowLayout(FlowLayout.CENTER)));
+
         centerPanel.add(privateOrPublicKeyChoosePanel);
 
         JPanel loadOrStoreChoosePanel = new JPanel(new GridLayout(3, 1));
@@ -77,9 +79,9 @@ public class KeysStoreLoad extends JPanel {
         ButtonGroup loadStoreKeyRGB = new ButtonGroup();
         loadStoreKeyRGB.add(loadKeyRB);
         loadStoreKeyRGB.add(storeKeyRB);
-        loadOrStoreChoosePanel.add(loadKeyRB);
-        loadOrStoreChoosePanel.add(storeKeyRB);
-        loadOrStoreChoosePanel.add(privateKeyJComboBox);
+        loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(loadKeyRB, new FlowLayout(FlowLayout.CENTER)));
+        loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(storeKeyRB, new FlowLayout(FlowLayout.CENTER)));
+        loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(publicKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
         centerPanel.add(loadOrStoreChoosePanel);
         storeKeyRB.addItemListener(selected -> {
             privateKeyJComboBox.setEnabled(selected.getStateChange() == ItemEvent.SELECTED);
@@ -92,6 +94,10 @@ public class KeysStoreLoad extends JPanel {
         this.add(centerPanel, BorderLayout.CENTER);
         this.add(operationsPanel, BorderLayout.SOUTH);
 
+        TitledBorder border = new TitledBorder("Uvoz i izvoz kljuceva");
+        border.setTitleJustification(TitledBorder.CENTER);
+        this.setBorder(border);
+
         button.addActionListener(event -> {
             if (loadKeyRB.isSelected()) {
                 if (publicKeyRB.isSelected()) {
@@ -102,7 +108,6 @@ public class KeysStoreLoad extends JPanel {
                         try {
                             PGPPublicKey publicKey = readPublicKey(selectedFile.getAbsolutePath());
                             publicKeyAction.callback(publicKey);
-                            publicKeyJComboBox.addItem(new PGPPublicKeyComboBox(publicKey));
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }
@@ -116,7 +121,6 @@ public class KeysStoreLoad extends JPanel {
                         try {
                             PGPSecretKey secretKey = readSecretKey(selectedFile.getAbsolutePath());
                             secretKeyAction.callback(secretKey);
-                            privateKeyJComboBox.addItem(new PGPPrivateKeyComboBox(secretKey));
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }
@@ -125,6 +129,10 @@ public class KeysStoreLoad extends JPanel {
             }
             else if (storeKeyRB.isSelected()) {
                 if (publicKeyRB.isSelected()) {
+                    if (publicKeyJComboBox.getItemCount() == 0) {
+                        JOptionPane.showMessageDialog(KeysStoreLoad.this, "Ne postoji kljuc za izvoz", "", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     JFileChooser fileChooser = new JFileChooser();
                     int openDialog = fileChooser.showSaveDialog(KeysStoreLoad.this);
                     if (openDialog == JFileChooser.APPROVE_OPTION) {
@@ -138,6 +146,10 @@ public class KeysStoreLoad extends JPanel {
                     }
                 }
                 else if (privateKeyRB.isSelected()) {
+                    if (privateKeyJComboBox.getItemCount() == 0) {
+                        JOptionPane.showMessageDialog(KeysStoreLoad.this, "Ne postoji kljuc za izvoz", "", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     JFileChooser fileChooser = new JFileChooser();
                     int openDialog = fileChooser.showSaveDialog(KeysStoreLoad.this);
                     if (openDialog == JFileChooser.APPROVE_OPTION) {
@@ -150,6 +162,31 @@ public class KeysStoreLoad extends JPanel {
                         }
                     }
                 }
+            }
+        });
+
+        PrivateKeyRing.getInstance().addObserver(secretKeys -> {
+            PGPPrivateKeyComboBox[] comboBoxes = secretKeys.stream().map(PGPPrivateKeyComboBox::new).toArray(PGPPrivateKeyComboBox[]::new);
+            privateKeyJComboBox.setModel(new DefaultComboBoxModel<>(comboBoxes));
+        });
+
+        PublicKeyRing.getInstance().addObserver(publicKeys -> {
+            PGPPublicKeyComboBox[] comboBoxes = publicKeys.stream().map(PGPPublicKeyComboBox::new).toArray(PGPPublicKeyComboBox[]::new);
+            publicKeyJComboBox.setModel(new DefaultComboBoxModel<>(comboBoxes));
+        });
+
+        publicKeyRB.addItemListener(event -> {
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                loadOrStoreChoosePanel.remove(2);
+                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(publicKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
+                loadOrStoreChoosePanel.revalidate();
+            }
+        });
+        privateKeyRB.addItemListener(event -> {
+            if (event.getStateChange() == ItemEvent.SELECTED) {
+                loadOrStoreChoosePanel.remove(2);
+                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(privateKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
+                loadOrStoreChoosePanel.revalidate();
             }
         });
     }
