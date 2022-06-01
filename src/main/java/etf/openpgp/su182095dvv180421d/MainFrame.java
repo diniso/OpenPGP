@@ -43,7 +43,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView());
+        jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView(this));
 
         JPanel keysLoadStoreGenerate = new JPanel(new GridLayout(1, 2));
         keysLoadStoreGenerate.add(new KeysStoreLoad(

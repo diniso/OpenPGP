@@ -7,17 +7,29 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.util.encoders.Base64;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
 
 public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecretKey>> {
 
+    private JFrame parent;
     private JTable table;
     private final JScrollPane sp;
+    private final JTextField textField = new JTextField("");
+    private JButton button = new JButton("Delete");
 
-    public PrivateKeyRingView() {
+    public PrivateKeyRingView(JFrame parentFrame) {
+        parent = parentFrame;
         this.setOpaque(false);
+        this.setLayout(new BorderLayout());
+
         sp = new JScrollPane();
         sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -26,6 +38,37 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
         setData(PrivateKeyRing.getInstance().getAllKeys());
 
         this.add(sp);
+        this.addTopComponents();
+    }
+
+    private void addTopComponents() {
+        JPanel panel = new JPanel(new GridLayout(2 , 1));
+
+        JPanel panel2 = new JPanel(new GridLayout(1 , 5));
+        for (int i = 0 ; i < 2 ; i++) panel2.add(new JPanel());
+        panel2.add(button);
+        for (int i = 0 ; i < 2 ; i++) panel2.add(new JPanel());
+
+        panel2.setBorder(new EmptyBorder(5,0,5,0));
+
+        button.addActionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row == -1) {
+                JOptionPane.showMessageDialog(null,
+                        "Select key that you want to delete!",
+                        "PopUp Dialog",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            new DeletePrivateKeyDialog(parent, PrivateKeyRing.getInstance().getAllKeys().get(row));
+        });
+        panel.add(panel2);
+        panel.add(textField);
+        textField.setHorizontalAlignment(SwingConstants.CENTER);
+        textField.setFont(new Font("Serif", Font.BOLD, 20));
+        textField.setEditable(false);
+        textField.setBorder(new EmptyBorder(10,10,10,10));
+        this.add(panel, BorderLayout.NORTH);
     }
 
     public void setData(List<PGPSecretKey> pks) {
@@ -53,6 +96,21 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
         this.sp.setViewportView(table);
 
         table.setFillsViewportHeight(true);
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (e.getClickCount() == 1) {
+                    final JTable target = (JTable)e.getSource();
+                    final int row = target.getSelectedRow();
+                    final int column = target.getSelectedColumn();
+                    String value = (String)target.getValueAt(row , column);
+
+                    textField.setText(value);
+                }
+            }
+        });
     }
 
     @Override
