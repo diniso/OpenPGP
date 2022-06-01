@@ -4,8 +4,8 @@ public class Config {
     public static final int FRAME_WIDTH = 900;
     public static final int FRAME_HEIGHT = 480;
 
-    public static final String privateKeyRingFile = "";
-    public static final String publicKeyRingFile = "";
+    public static final String privateKeyRingSubfolder = "PrivateKeyRing";
+    public static final String publicKeyRingFileSubfolder = "PublicKeyRing";
 
     public static final int S2K_ITERATION_COUNT = 50;
     public static final int CERTAINITY = 5;
