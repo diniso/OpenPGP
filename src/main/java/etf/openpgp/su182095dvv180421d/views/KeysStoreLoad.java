@@ -34,22 +34,22 @@ public class KeysStoreLoad extends JPanel {
         }
     }
 
-    static class PGPPublicKeyComboBox {
-        PGPPublicKey pgpPublicKey;
-
-        public PGPPublicKeyComboBox(PGPPublicKey pgpPublicKey) {
-            this.pgpPublicKey = pgpPublicKey;
-        }
-
-        @Override
-        public String toString() {
-            Iterator<String> userIDs = pgpPublicKey.getUserIDs();
-            if (userIDs.hasNext()) {
-                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey), userIDs.next());
-            }
-            return "ID: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey));
-        }
-    }
+//    static class PGPPublicKeyComboBox {
+//        PGPPublicKey pgpPublicKey;
+//
+//        public PGPPublicKeyComboBox(PGPPublicKey pgpPublicKey) {
+//            this.pgpPublicKey = pgpPublicKey;
+//        }
+//
+//        @Override
+//        public String toString() {
+//            Iterator<String> userIDs = pgpPublicKey.getUserIDs();
+//            if (userIDs.hasNext()) {
+//                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey), userIDs.next());
+//            }
+//            return "ID: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey));
+//        }
+//    }
 
     public KeysStoreLoad(Callback<PGPPublicKey> publicKeyAction, Callback<PGPSecretKey> secretKeyAction, Supplier<PGPPublicKey[]> publicKeysSupplier, Supplier<PGPSecretKey[]> secretKeysSupplier) {
         super(new BorderLayout());
@@ -74,18 +74,18 @@ public class KeysStoreLoad extends JPanel {
         JRadioButton storeKeyRB = new JRadioButton("Sacuvaj kljuc");
         JComboBox<PGPPrivateKeyComboBox> privateKeyJComboBox = new JComboBox<>(Arrays.stream(secretKeysSupplier.get()).map(PGPPrivateKeyComboBox::new).toArray(PGPPrivateKeyComboBox[]::new));
         privateKeyJComboBox.setEnabled(false);
-        JComboBox<PGPPublicKeyComboBox> publicKeyJComboBox = new JComboBox<>(Arrays.stream(publicKeysSupplier.get()).map(PGPPublicKeyComboBox::new).toArray(PGPPublicKeyComboBox[]::new));
-        publicKeyJComboBox.setEnabled(false);
+//        JComboBox<PGPPublicKeyComboBox> publicKeyJComboBox = new JComboBox<>(Arrays.stream(publicKeysSupplier.get()).map(PGPPublicKeyComboBox::new).toArray(PGPPublicKeyComboBox[]::new));
+//        publicKeyJComboBox.setEnabled(false);
         ButtonGroup loadStoreKeyRGB = new ButtonGroup();
         loadStoreKeyRGB.add(loadKeyRB);
         loadStoreKeyRGB.add(storeKeyRB);
         loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(loadKeyRB, new FlowLayout(FlowLayout.CENTER)));
         loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(storeKeyRB, new FlowLayout(FlowLayout.CENTER)));
-        loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(publicKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
+        loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(privateKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
         centerPanel.add(loadOrStoreChoosePanel);
         storeKeyRB.addItemListener(selected -> {
             privateKeyJComboBox.setEnabled(selected.getStateChange() == ItemEvent.SELECTED);
-            publicKeyJComboBox.setEnabled(selected.getStateChange() == ItemEvent.SELECTED);
+//            publicKeyJComboBox.setEnabled(selected.getStateChange() == ItemEvent.SELECTED);
         });
 
         JPanel operationsPanel = new JPanel();
@@ -129,7 +129,7 @@ public class KeysStoreLoad extends JPanel {
             }
             else if (storeKeyRB.isSelected()) {
                 if (publicKeyRB.isSelected()) {
-                    if (publicKeyJComboBox.getItemCount() == 0) {
+                    if (privateKeyJComboBox.getItemCount() == 0) {
                         JOptionPane.showMessageDialog(KeysStoreLoad.this, "Ne postoji kljuc za izvoz", "", JOptionPane.WARNING_MESSAGE);
                         return;
                     }
@@ -138,8 +138,8 @@ public class KeysStoreLoad extends JPanel {
                     if (openDialog == JFileChooser.APPROVE_OPTION) {
                         File selectedFile = fileChooser.getSelectedFile();
                         try {
-                            PGPPublicKeyComboBox publicKeyComboBox = (PGPPublicKeyComboBox) publicKeyJComboBox.getSelectedItem();
-                            storePublicKey(publicKeyComboBox.pgpPublicKey, selectedFile.getAbsolutePath());
+                            PGPPrivateKeyComboBox privateKeyComboBox = (PGPPrivateKeyComboBox) privateKeyJComboBox.getSelectedItem();
+                            storePublicKey(privateKeyComboBox.pgpSecretKey.getPublicKey(), selectedFile.getAbsolutePath());
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }
@@ -170,25 +170,25 @@ public class KeysStoreLoad extends JPanel {
             privateKeyJComboBox.setModel(new DefaultComboBoxModel<>(comboBoxes));
         });
 
-        PublicKeyRing.getInstance().addObserver(publicKeys -> {
-            PGPPublicKeyComboBox[] comboBoxes = publicKeys.stream().map(PGPPublicKeyComboBox::new).toArray(PGPPublicKeyComboBox[]::new);
-            publicKeyJComboBox.setModel(new DefaultComboBoxModel<>(comboBoxes));
-        });
+//        PublicKeyRing.getInstance().addObserver(publicKeys -> {
+//            PGPPublicKeyComboBox[] comboBoxes = publicKeys.stream().map(PGPPublicKeyComboBox::new).toArray(PGPPublicKeyComboBox[]::new);
+//            publicKeyJComboBox.setModel(new DefaultComboBoxModel<>(comboBoxes));
+//        });
 
-        publicKeyRB.addItemListener(event -> {
-            if (event.getStateChange() == ItemEvent.SELECTED) {
-                loadOrStoreChoosePanel.remove(2);
-                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(publicKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
-                loadOrStoreChoosePanel.revalidate();
-            }
-        });
-        privateKeyRB.addItemListener(event -> {
-            if (event.getStateChange() == ItemEvent.SELECTED) {
-                loadOrStoreChoosePanel.remove(2);
-                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(privateKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
-                loadOrStoreChoosePanel.revalidate();
-            }
-        });
+//        publicKeyRB.addItemListener(event -> {
+//            if (event.getStateChange() == ItemEvent.SELECTED) {
+//                loadOrStoreChoosePanel.remove(2);
+//                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(publicKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
+//                loadOrStoreChoosePanel.revalidate();
+//            }
+//        });
+//        privateKeyRB.addItemListener(event -> {
+//            if (event.getStateChange() == ItemEvent.SELECTED) {
+//                loadOrStoreChoosePanel.remove(2);
+//                loadOrStoreChoosePanel.add(Utils.wrapComponentToLayout(privateKeyJComboBox, new FlowLayout(FlowLayout.CENTER)));
+//                loadOrStoreChoosePanel.revalidate();
+//            }
+//        });
     }
 
     // Will be moved to dedicated file soon
