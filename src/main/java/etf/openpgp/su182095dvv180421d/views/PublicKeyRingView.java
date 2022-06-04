@@ -2,8 +2,11 @@ package etf.openpgp.su182095dvv180421d.views;
 
 import etf.openpgp.su182095dvv180421d.model.Observer;
 import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
+import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
 import etf.openpgp.su182095dvv180421d.model.Utils;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.encoders.Base64;
 
 import javax.swing.*;
@@ -15,16 +18,14 @@ import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
 
-public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecretKey>> {
+public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublicKey>> {
 
-    private JFrame parent;
     private JTable table;
     private final JScrollPane sp;
     private final JTextField textField = new JTextField("");
     private JButton button = new JButton("Delete");
 
-    public PrivateKeyRingView(JFrame parentFrame) {
-        parent = parentFrame;
+    public PublicKeyRingView() {
         this.setOpaque(false);
         this.setLayout(new BorderLayout());
 
@@ -32,8 +33,8 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
         sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-        PrivateKeyRing.getInstance().addObserver(this);
-        setData(PrivateKeyRing.getInstance().getAllKeys());
+        PublicKeyRing.getInstance().addObserver(this);
+        setData(PublicKeyRing.getInstance().getAllKeys());
 
         this.add(sp);
         this.addTopComponents();
@@ -58,7 +59,7 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
                         JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
-            new DeletePrivateKeyDialog(parent, PrivateKeyRing.getInstance().getAllKeys().get(row));
+            PublicKeyRing.getInstance().removeKey(row);
         });
         panel.add(panel2);
         panel.add(textField);
@@ -69,30 +70,41 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
         this.add(panel, BorderLayout.NORTH);
     }
 
-    public void setData(List<PGPSecretKey> pks) {
+    public void setData(List<PGPPublicKey> pks) {
         if (table != null) this.sp.remove(table);
-        String[][] data = new String[pks.size()][5];
-        String[] column = {"Timestamp", "Key ID", "Public key","Encrypted private key" ,"User Id"};
-        try {
-            for (int i = 0; i < pks.size(); i++) {
-                PGPSecretKey pk = pks.get(i);
 
-                data[i][0] = new SimpleDateFormat("yyyy-MM-dd hh:mm").format(pk.getPublicKey().getCreationTime());
-                data[i][1] = Utils.getPGPPrivateKeyIdBase64(pk);
-                data[i][2] = Base64.toBase64String(pk.getPublicKey().getPublicKeyPacket().getKey().getEncoded());
-                data[i][3] = Base64.toBase64String(pk.getEncoded());
-                data[i][4] = "";
-                Iterator<String> userIDs = pk.getUserIDs();
-                if (userIDs.hasNext()) {
-                    data[i][4] = userIDs.next();
-                }
+        String[][] data = new String[pks.size()][8];
+        String[] column = {"Timestamp", "Key ID", "Public key", "User Id", "Owner trust", "Key Legitimacy", "Signatures", "Signatures Trust"};
+        for (int i = 0; i < pks.size(); i++) {
+            PGPPublicKey pk = pks.get(i);
 
+            data[i][0] = new SimpleDateFormat("yyyy-MM-dd hh:mm").format(pk.getCreationTime());
+            data[i][1] = Utils.getPGPPublicKeyIdBase64(pk);
+            data[i][2] = Base64.toBase64String(pk.getPublicKeyPacket().getKey().getEncoded());
+            data[i][3] = "";
+            Iterator<String> userIDs = pk.getUserIDs();
+            if (userIDs.hasNext()) {
+                data[i][3] = userIDs.next();
+            }
+
+            data[i][4] = "";
+            data[i][5] = "";
+
+            data[i][6] = "";
+            Iterator<PGPSignature> signatures = pk.getKeySignatures();
+            while(signatures.hasNext()) {
+                PGPSignature signature = signatures.next();
+                data[i][6] += signature.getKeyID() + ",";
+            }
+
+            data[i][7] = "";
+            Iterator<PGPSignature> signatures2 = pk.getSignatures();
+            while(signatures2.hasNext()) {
+                PGPSignature signature = signatures2.next();
+                data[i][7] += signature.getKeyID() + ",";
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+
 
         table = new JTable(data, column);
         table.setDefaultEditor(Object.class, null);
@@ -118,7 +130,7 @@ public class PrivateKeyRingView extends JPanel implements Observer<List<PGPSecre
     }
 
     @Override
-    public void observableChanged(List<PGPSecretKey> pks) {
+    public void observableChanged(List<PGPPublicKey> pks) {
         setData(pks);
     }
 }

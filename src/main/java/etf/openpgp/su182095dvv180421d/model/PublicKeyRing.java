@@ -26,14 +26,17 @@ public class PublicKeyRing extends KeyRing<PGPPublicKey> implements Serializable
 
     public void addKey(PGPPublicKey key) {
         this.publicKeys.add(key);
+        notifyObservers(publicKeys);
     }
 
     public void removeKey(PGPPublicKey key) {
         this.publicKeys.remove(key);
+        notifyObservers(publicKeys);
     }
 
     public void removeKey(int index) {
         publicKeys.remove(index);
+        notifyObservers(publicKeys);
     }
 
     //
@@ -53,13 +56,13 @@ public class PublicKeyRing extends KeyRing<PGPPublicKey> implements Serializable
 
         File f = new File(Config.publicKeyRingFileSubfolder);
         if (!f.exists() || !f.isDirectory()) {
-            System.out.println("Subdirectory for PrivateKeyRing doesn't exists or is not folder! 1");
+            System.out.println("Subdirectory for PublicKeyRing doesn't exists or is not folder! 1");
             return;
         }
 
         String[] filenames = f.list();
         if (filenames == null) {
-            System.out.println("Subdirectory for PrivateKeyRing doesn't exists or is not folder! 2");
+            System.out.println("Subdirectory for PublicKeyRing doesn't exists or is not folder! 2");
             return;
         }
 

@@ -6,6 +6,7 @@ import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
 import etf.openpgp.su182095dvv180421d.views.KeyGenerate;
 import etf.openpgp.su182095dvv180421d.views.KeysStoreLoad;
 import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingView;
+import etf.openpgp.su182095dvv180421d.views.PublicKeyRingView;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 
@@ -44,6 +45,7 @@ public class MainFrame extends JFrame {
         });
 
         jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView(this));
+        jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PublicKeyRingView());
 
         JPanel keysLoadStoreGenerate = new JPanel(new GridLayout(1, 2));
         keysLoadStoreGenerate.add(new KeysStoreLoad(
