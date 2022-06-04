@@ -37,7 +37,7 @@ public class LoadStoreKeys {
             while (publicKeys.hasNext()) {
                 PGPPublicKey publicKey = publicKeys.next();
                 System.out.println("Encryption key = " + publicKey.isEncryptionKey() + ";Key id = " + publicKey.getKeyID() + ";User id = " + publicKey.getUserIDs().hasNext());
-                if (publicKey.isEncryptionKey()) {
+                if (!publicKey.isEncryptionKey()) {
                     fileInputStream.close();
                     return publicKey;
                 }

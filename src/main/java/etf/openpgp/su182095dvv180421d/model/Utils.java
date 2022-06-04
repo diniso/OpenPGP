@@ -49,14 +49,13 @@ public class Utils {
         PGPKeyPair rsakpEnc = new BcPGPKeyPair(PGPPublicKey.RSA_ENCRYPT, kpg.generateKeyPair(), now);
         PGPSignatureSubpacketGenerator signhashgen = new PGPSignatureSubpacketGenerator();
         signhashgen.setKeyFlags(false, KeyFlags.SIGN_DATA | KeyFlags.CERTIFY_OTHER);
-        signhashgen.setPreferredSymmetricAlgorithms(false, new int[] { SymmetricKeyAlgorithmTags.CAST5, SymmetricKeyAlgorithmTags.AES_256, SymmetricKeyAlgorithmTags.AES_192, SymmetricKeyAlgorithmTags.TWOFISH, SymmetricKeyAlgorithmTags.AES_128 });
-        signhashgen.setPreferredHashAlgorithms(false, new int[] { HashAlgorithmTags.SHA256, HashAlgorithmTags.SHA1, HashAlgorithmTags.SHA384, HashAlgorithmTags.SHA512, HashAlgorithmTags.SHA224 });
+        signhashgen.setPreferredSymmetricAlgorithms(false, new int[] { SymmetricKeyAlgorithmTags.TRIPLE_DES, SymmetricKeyAlgorithmTags.AES_128 });
+        signhashgen.setPreferredHashAlgorithms(false, new int[] { HashAlgorithmTags.SHA1 });
         signhashgen.setFeature(false, Features.FEATURE_MODIFICATION_DETECTION);
         PGPSignatureSubpacketGenerator enchashgen = new PGPSignatureSubpacketGenerator();
         enchashgen.setKeyFlags(false, KeyFlags.ENCRYPT_COMMS | KeyFlags.ENCRYPT_STORAGE);
-        PGPDigestCalculator sha256Calc = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA256);
         PGPDigestCalculator sha1Calc = new BcPGPDigestCalculatorProvider().get(HashAlgorithmTags.SHA1);
-        PBESecretKeyEncryptor pske = (new BcPBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, sha256Calc, Config.S2K_ITERATION_COUNT)).build(password.toCharArray());
+        PBESecretKeyEncryptor pske = (new BcPBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, sha1Calc, Config.S2K_ITERATION_COUNT)).build(password.toCharArray());
         PGPKeyRingGenerator keyRingGen = new PGPKeyRingGenerator(PGPSignature.POSITIVE_CERTIFICATION, rsakpSign, id, sha1Calc, signhashgen.generate(), null, new BcPGPContentSignerBuilder(rsakpSign.getPublicKey().getAlgorithm(), HashAlgorithmTags.SHA1), pske);
         keyRingGen.addSubKey(rsakpEnc, enchashgen.generate(), null);
         return keyRingGen;

@@ -4,10 +4,12 @@ import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
 import etf.openpgp.su182095dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPSecretKey;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.util.Iterator;
 
 public class KeyGenerate extends JPanel {
 
@@ -82,7 +84,13 @@ public class KeyGenerate extends JPanel {
             int rsaEncryptionBlockLength = Integer.parseInt(algorithm.split(" ")[1]);
             try {
                 PGPKeyRingGenerator pgpKeyRingGenerator = Utils.generateKeyRingGenerator(name + " <" + email + ">", password, rsaEncryptionBlockLength);
-                PrivateKeyRing.getInstance().addKey(pgpKeyRingGenerator.generateSecretKeyRing().getSecretKey());
+                Iterator<PGPSecretKey> secretKeys = pgpKeyRingGenerator.generateSecretKeyRing().getSecretKeys();
+                while (secretKeys.hasNext()) {
+                    PGPSecretKey next = secretKeys.next();
+                    if (!next.getPublicKey().isEncryptionKey()) {
+                        PrivateKeyRing.getInstance().addKey(next);
+                    }
+                }
             } catch (PGPException e) {
                 e.printStackTrace();
             }
