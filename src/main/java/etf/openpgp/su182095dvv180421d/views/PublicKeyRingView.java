@@ -1,9 +1,6 @@
 package etf.openpgp.su182095dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.Observer;
-import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
-import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
-import etf.openpgp.su182095dvv180421d.model.Utils;
+import etf.openpgp.su182095dvv180421d.model.*;
 import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -74,7 +71,7 @@ public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublic
         if (table != null) this.sp.remove(table);
 
         String[][] data = new String[pks.size()][8];
-        String[] column = {"Timestamp", "Key ID", "Public key", "User Id", "Owner trust", "Key Legitimacy", "Signatures", "Signatures Trust"};
+        String[] column = {"Timestamp", "Key ID", "Public key", "User Id", "Owner trust","Signatures Trust", "Key Legitimacy", "Signatures", };
         for (int i = 0; i < pks.size(); i++) {
             PGPPublicKey pk = pks.get(i);
 
@@ -87,22 +84,14 @@ public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublic
                 data[i][3] = userIDs.next();
             }
 
-            data[i][4] = "";
-            data[i][5] = "";
+            data[i][6]= String.valueOf(PublicKeyTrust.getSignatureTrust(pk));
+            data[i][7] = PublicKeyTrust.getSignatureToString(pk.getSignatures());
 
-            data[i][6] = "";
-            Iterator<PGPSignature> signatures = pk.getKeySignatures();
-            while(signatures.hasNext()) {
-                PGPSignature signature = signatures.next();
-                data[i][6] += signature.getKeyID() + ",";
-            }
+            data[i][4] = String.valueOf(PublicKeyTrust.getOwnerTrust(pk));
+            data[i][5] = PublicKeyTrust.getSignatureToString(pk.getKeySignatures());
 
-            data[i][7] = "";
-            Iterator<PGPSignature> signatures2 = pk.getSignatures();
-            while(signatures2.hasNext()) {
-                PGPSignature signature = signatures2.next();
-                data[i][7] += signature.getKeyID() + ",";
-            }
+
+
         }
 
 
