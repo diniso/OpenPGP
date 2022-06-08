@@ -9,21 +9,26 @@ import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 public class PGPMessageFactory {
 
-    public void exportFile(File inputFile, File outputFile, PGPSecretKeyRing secretKey, List<PGPPublicKeyRing> publicKeyList, String password, boolean convertToRadix64, boolean compress, boolean isSigning) throws PGPException, IOException {
+    public static final int[] SUPPORTED_ALGORITHMS = {
+            SymmetricKeyAlgorithmTags.AES_128,
+            SymmetricKeyAlgorithmTags.TRIPLE_DES,
+            SymmetricKeyAlgorithmTags.NULL
+    };
+
+    public void exportFile(File inputFile, File outputFile, PGPSecretKeyRing secretKey, List<PGPPublicKeyRing> publicKeyList, String password, boolean convertToRadix64, boolean compress, boolean isSigning, int encryptionAlgorithm) throws PGPException, IOException {
         if (!Files.exists(inputFile.toPath())) {
             throw new IllegalArgumentException("Ne postoji ulazni fajl");
         }
 
-        BcPGPDataEncryptorBuilder dataEncryptorBuilder = new BcPGPDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_128);
-        dataEncryptorBuilder.setWithIntegrityPacket(true); // It's added because kleopatra make a warning about not integrity
-        PGPEncryptedDataGenerator pedg = new PGPEncryptedDataGenerator(dataEncryptorBuilder);
-
-        pedg.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(Utils.getEncryptionPGPPublicKey(publicKeyList.get(0)))); // just for now
+        if (Arrays.stream(SUPPORTED_ALGORITHMS).noneMatch(e -> e == encryptionAlgorithm)) {
+            throw new IllegalArgumentException("Moguce je koristiti enkripciju iskljucivo koristeci AES 128 ili Triple DES");
+        }
 
         OutputStream fileOutStream = new FileOutputStream(outputFile);
         OutputStream armoredFileOutputStream = fileOutStream;
@@ -31,7 +36,15 @@ public class PGPMessageFactory {
             armoredFileOutputStream = new ArmoredOutputStream(fileOutStream);
         }
 
-        OutputStream outputStream = pedg.open(armoredFileOutputStream, new byte[1 << 16]);
+        OutputStream outputStream = armoredFileOutputStream;
+        PGPEncryptedDataGenerator pedg = null;
+        if (encryptionAlgorithm != SymmetricKeyAlgorithmTags.NULL) {
+            BcPGPDataEncryptorBuilder dataEncryptorBuilder = new BcPGPDataEncryptorBuilder(encryptionAlgorithm);
+            dataEncryptorBuilder.setWithIntegrityPacket(true); // It's added because kleopatra make a warning about not integrity
+            pedg = new PGPEncryptedDataGenerator(dataEncryptorBuilder);
+            pedg.addMethod(new BcPublicKeyKeyEncryptionMethodGenerator(Utils.getEncryptionPGPPublicKey(publicKeyList.get(0)))); // just for now
+            outputStream = pedg.open(armoredFileOutputStream, new byte[65536]);
+        }
         OutputStream compressedOutputStream = outputStream;
         if (compress) {
             PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(PGPCompressedData.ZIP);
@@ -71,8 +84,10 @@ public class PGPMessageFactory {
         if (compress) {
             compressedOutputStream.close();
         }
-        outputStream.close();
-        pedg.close();
+        if (encryptionAlgorithm != SymmetricKeyAlgorithmTags.NULL) {
+            outputStream.close();
+            pedg.close();
+        }
         if (convertToRadix64) {
             armoredFileOutputStream.close();
         }

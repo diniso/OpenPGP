@@ -4,6 +4,7 @@ import etf.openpgp.su182095dvv180421d.model.PGPMessageFactory;
 import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
 import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
 import etf.openpgp.su182095dvv180421d.model.Utils;
+import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.examples.SignedFileProcessor;
@@ -20,24 +21,75 @@ public class CreatePGPMessage extends JPanel {
     File destinationFile;
     File inputFile;
 
+    public static class SymmetricKeyAlgorithmTagsComboBox {
+
+        int algorithm;
+
+        public SymmetricKeyAlgorithmTagsComboBox(int algorithm) {
+            if (algorithm < SymmetricKeyAlgorithmTags.NULL || algorithm > SymmetricKeyAlgorithmTags.CAMELLIA_256) {
+                throw new IllegalArgumentException("Algorithm is not recognized");
+            }
+            this.algorithm = algorithm;
+        }
+
+        @Override
+        public String toString() {
+            return switch (algorithm) {
+                case SymmetricKeyAlgorithmTags.AES_128 -> "AES 128";
+                case SymmetricKeyAlgorithmTags.TRIPLE_DES -> "Trostruki DES";
+                default -> Integer.toString(algorithm);
+            };
+        }
+    }
+
+    public static final SymmetricKeyAlgorithmTagsComboBox[] SUPPORTED_ALGORITHMS = new SymmetricKeyAlgorithmTagsComboBox[] {
+            new SymmetricKeyAlgorithmTagsComboBox(SymmetricKeyAlgorithmTags.AES_128),
+            new SymmetricKeyAlgorithmTagsComboBox(SymmetricKeyAlgorithmTags.TRIPLE_DES)
+    };
+
     public CreatePGPMessage() {
         super(new GridLayout(5, 1, 20, 10));
 
-        JPanel encryptionPanel = new JPanel(new GridLayout(2,1, 10, 10));
-        encryptionPanel.setBorder(new TitledBorder("Enkripcija"));
-        encryptionPanel.add(new JLabel("Odaberite javne kljuceve:", SwingConstants.CENTER));
+        JPanel encryptionPanelKeys = new JPanel(new GridLayout(2,1, 10, 10));
+        encryptionPanelKeys.add(new JLabel("Odaberite javne kljuceve:", SwingConstants.CENTER));
         JList<KeysStoreLoad.PGPPublicKeyComboBox> publicKeyComboBoxJList = new JList<>();
         populateJListWithPublicKeys(publicKeyComboBoxJList, PublicKeyRing.getInstance().getAllKeys());
-        encryptionPanel.add(publicKeyComboBoxJList);
+        encryptionPanelKeys.add(publicKeyComboBoxJList);
+
+        JPanel encryptionPanelAlgorithm = new JPanel(new GridLayout(2, 1, 10, 10));
+        JLabel algorithmJLabel = new JLabel("Algoritam", SwingConstants.CENTER);
+        JComboBox<SymmetricKeyAlgorithmTagsComboBox> keyAlgorithmTagsJComboBox = new JComboBox<>(SUPPORTED_ALGORITHMS);
+        encryptionPanelAlgorithm.add(algorithmJLabel);
+        encryptionPanelAlgorithm.add(keyAlgorithmTagsJComboBox);
+
+        JCheckBox encryptionCheckbox = new JCheckBox("Primeni enkripciju", true);
+
+        JPanel encryptionPanel = new JPanel(new GridLayout(1,3, 10, 5));
+        encryptionPanel.add(Utils.wrapComponentToLayout(encryptionCheckbox, new FlowLayout()));
+        encryptionPanel.add(encryptionPanelKeys);
+        encryptionPanel.add(encryptionPanelAlgorithm);
+        encryptionPanel.setBorder(new TitledBorder("Enkripcija"));
+
         this.add(encryptionPanel);
 
-        JPanel signaturePanel = new JPanel(new GridLayout(2,1, 10, 10));
+        JPanel signaturePanel = new JPanel(new GridLayout(1,2));
         signaturePanel.setBorder(new TitledBorder("Potpisivanje"));
-        signaturePanel.add(new JLabel("Odaberite tajni kljucev:", SwingConstants.CENTER));
+
+        JCheckBox makeSignatureCheckBox = new JCheckBox("Izvrsi potpis", true);
+
+        JPanel signatureKeyPanel = new JPanel(new GridLayout(2,1, 10, 10));
+        signatureKeyPanel.add(new JLabel("Odaberite tajni kljucev:", SwingConstants.CENTER));
         JComboBox<KeysStoreLoad.PGPPrivateKeyComboBox> secretKeyComboBoxJComboBox = new JComboBox<>();
         populateComboboxWithSecretKeys(secretKeyComboBoxJComboBox, PrivateKeyRing.getInstance().getAllKeys());
-        signaturePanel.add(secretKeyComboBoxJComboBox);
+        signatureKeyPanel.add(secretKeyComboBoxJComboBox);
+
+        signaturePanel.add(Utils.wrapComponentToLayout(makeSignatureCheckBox, new FlowLayout()));
+        signaturePanel.add(signatureKeyPanel);
+
+
         this.add(signaturePanel);
+
+        JPanel filesPanel = new JPanel(new GridLayout(1, 2));
 
         JPanel chooseInputFilePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton chooseInputFileButton = new JButton("Odaberite ulazni fajl");
@@ -53,7 +105,7 @@ public class CreatePGPMessage extends JPanel {
                 inputFileLabel.setText("Fajl: " + inputFile.getAbsolutePath());
             }
         });
-        this.add(chooseInputFilePanel);
+        filesPanel.add(chooseInputFilePanel);
 
         JPanel chooseDestinationFilePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton chooseFileButton = new JButton("Odaberite fajl");
@@ -69,7 +121,17 @@ public class CreatePGPMessage extends JPanel {
                 fileLabel.setText("Odrediste: " + destinationFile.getAbsolutePath());
             }
         });
-        this.add(chooseDestinationFilePanel);
+        filesPanel.add(chooseDestinationFilePanel);
+
+        this.add(filesPanel);
+
+        JPanel additionOptionsPanel = new JPanel(new GridLayout(1, 2));
+        additionOptionsPanel.setBorder(new TitledBorder("Dodatne opcije"));
+        JCheckBox radix64CheckBox = new JCheckBox("Konverzija u radix 64", true);
+        JCheckBox compressionCheckBox = new JCheckBox("Kompresija", true);
+        additionOptionsPanel.add(Utils.wrapComponentToLayout(radix64CheckBox, new FlowLayout()));
+        additionOptionsPanel.add(Utils.wrapComponentToLayout(compressionCheckBox, new FlowLayout()));
+        this.add(additionOptionsPanel);
 
         JButton performAction = new JButton("Sacuvaj fajl");
         this.add(Utils.wrapComponentToLayout(performAction, new FlowLayout()));
@@ -111,7 +173,11 @@ public class CreatePGPMessage extends JPanel {
 
             try {
                 PGPMessageFactory pgpMessageFactory = new PGPMessageFactory();
-                pgpMessageFactory.exportFile(inputFile, destinationFile, privateKeyComboBoxJComboBoxSelectedItem.pgpSecretKey, publicKeys, password, true, true, true);
+                int algorithm = SymmetricKeyAlgorithmTags.NULL;
+                if (encryptionCheckbox.isSelected()) {
+                    algorithm = ((SymmetricKeyAlgorithmTagsComboBox) keyAlgorithmTagsJComboBox.getSelectedItem()).algorithm;
+                }
+                pgpMessageFactory.exportFile(inputFile, destinationFile, privateKeyComboBoxJComboBoxSelectedItem.pgpSecretKey, publicKeys, password, radix64CheckBox.isSelected(), compressionCheckBox.isSelected(), makeSignatureCheckBox.isSelected(), algorithm);
                 JOptionPane.showMessageDialog(CreatePGPMessage.this, "Fajl je uspesno obradjen", "Uspeh", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(CreatePGPMessage.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
