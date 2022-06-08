@@ -16,16 +16,18 @@ public class ReadMessageView extends JPanel {
     private final JTextArea result = new JTextArea("");
 
     private String selectedFile;
+    private String savedFile;
 
-    private static final String savedFile = "encrypted.asc";
+    private JButton choseOutputFileButton = new JButton("Output file");
+
+ //   private static final String savedFile = "encrypted.asc";
 
     public ReadMessageView() {
         this.setLayout(new GridLayout(3, 1));
 
-        JPanel panelTop = new JPanel(new GridLayout(2, 5));
-        for (int i = 0; i < 2; i++) panelTop.add(new JPanel());
+        JPanel panelTop = new JPanel(new GridLayout(3, 5));
+        for (int i = 0; i < 7; i++) panelTop.add(new JPanel());
         panelTop.add(button);
-        panelTop.setBorder(new EmptyBorder(10, 0, 0, 0));
         for (int i = 0; i < 7; i++) panelTop.add(new JPanel());
         this.add(panelTop);
 
@@ -37,14 +39,16 @@ public class ReadMessageView extends JPanel {
 
                 try {
                     PGPSecretKey sk = ReadPGPMessage.getPGPSecretKeyFromFIle(selectedFile);
+                    disableTop();
                     if (sk != null) {
-                        disableTop();
-                        enableMiddle();
-                        return;
+                        enableMiddle(true);
                     }
-                    System.out.println("Pokrenuto ucitavanje bez passworda");
-                    Optional<String> opsResult = ReadPGPMessage.decryptAndVerify(selectedFile, null, savedFile);
-                    opsResult.ifPresent(result::setText);
+                    else {
+                        enableMiddle(false);
+                    }
+
+                    result.setText("");
+                    savedFile = null;
                 } catch (Exception ignored) {
                     result.setText("No key found for decryption");
                 }
@@ -63,15 +67,31 @@ public class ReadMessageView extends JPanel {
 
         for (int i = 0; i < 2; i++) panelMiddle.add(new JPanel());
 
-
-        JPanel panelMiddle3 = new JPanel(new GridLayout(2, 3));
+        JPanel panelMiddle3 = new JPanel(new GridLayout(3, 3));
         for (int i = 0; i < 4; i++) panelMiddle3.add(new JPanel());
+        panelMiddle3.add(choseOutputFileButton);
+        for (int i = 0; i < 2; i++) panelMiddle3.add(new JPanel());
         panelMiddle3.add(buttonPassword);
 
+        choseOutputFileButton.addActionListener(event -> {
+            JFileChooser fileChooser = new JFileChooser();
+            int openDialog = fileChooser.showSaveDialog(ReadMessageView.this);
+            if (openDialog == JFileChooser.APPROVE_OPTION) {
+                savedFile = fileChooser.getSelectedFile().getAbsolutePath();
+            }
+        });
+
         buttonPassword.addActionListener(event -> {
-            System.out.println("Pokrenuto ucitavanje sa passwordom");
-            Optional<String> opsResult = ReadPGPMessage.decryptAndVerify(selectedFile, passwordField.getText(), savedFile);
-            opsResult.ifPresent(result::setText);
+
+            if (savedFile == null) {
+                JOptionPane.showMessageDialog(null,
+                        "Select output file!",
+                        "PopUp Dialog",
+                        JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            String text = ReadPGPMessage.decryptAndVerify(selectedFile, passwordField.getText(), savedFile);
+            result.setText(text);
 
             disableMiddle();
             enableTop();
@@ -82,6 +102,7 @@ public class ReadMessageView extends JPanel {
         panelMiddle.add(panelMiddle3);
 
         for (int i = 0; i < 1; i++) panelMiddle.add(new JPanel());
+
 
         this.add(panelMiddle);
 
@@ -105,11 +126,15 @@ public class ReadMessageView extends JPanel {
     private void disableMiddle() {
         buttonPassword.setEnabled(false);
         passwordField.setEditable(false);
+        choseOutputFileButton.setEnabled(false);
     }
 
-    private void enableMiddle() {
+    private void enableMiddle(boolean hasPassword) {
+        if (hasPassword) {
+            passwordField.setEditable(true);
+        }
         buttonPassword.setEnabled(true);
-        passwordField.setEditable(true);
+        choseOutputFileButton.setEnabled(true);
     }
 
     private void disableTop() {
