@@ -48,7 +48,7 @@ public class ReadPGPMessage {
         throw new Exception("No key found");
     }
 
-    public static Optional<String> decryptAndVerify(
+    public static String decryptAndVerify(
             String decryptedFileName,
             String password,
             String filename) {
@@ -64,6 +64,8 @@ public class ReadPGPMessage {
 
             Object o = pgpF.nextObject();
             PGPObjectFactory plainFact = pgpF;
+
+            StringBuilder stringBuilder = new StringBuilder();
 
             if (o instanceof PGPEncryptedDataList) {
                 enc = (PGPEncryptedDataList) o;
@@ -83,11 +85,13 @@ public class ReadPGPMessage {
                 }
 
                 if (sKey == null) {
-                    return Optional.of("Pogresan password");
+                    return "Wrong password";
                 }
 
                 InputStream clear = ((PGPPublicKeyEncryptedData) pbe).getDataStream(new BcPublicKeyDataDecryptorFactory(sKey));
                 plainFact = new PGPObjectFactory(clear, new BcKeyFingerprintCalculator());
+
+                stringBuilder.append("Successfully decrypted message!");
             }
 
             PGPOnePassSignatureList onePassSignatureList = null;
@@ -127,17 +131,17 @@ public class ReadPGPMessage {
             byte[] output = outStream.toByteArray();
 
             if (onePassSignatureList == null || signatureList == null) {
-                return Optional.of("T");
+                return "Unknown error!";
             }
 
-            StringBuilder stringBuilder = new StringBuilder();
+
 
             for (int i = 0; i < onePassSignatureList.size(); i++) {
                 PGPOnePassSignature ops = onePassSignatureList.get(0);
                 publicKey = PublicKeyRing.getInstance().getSigningKey(ops.getKeyID());
 
                 if (publicKey == null) {
-                    return Optional.of("The key for sign verification is not found");
+                    return "The key for sign verification is not found";
                 }
 
                 ops.init(new BcPGPContentVerifierBuilderProvider(), publicKey);
@@ -145,8 +149,10 @@ public class ReadPGPMessage {
                 PGPSignature signature = signatureList.get(i);
 
                 if (!ops.verify(signature)) {
-                    throw new SignatureException("Unsuccessful signature check");
+                    return "Unsuccessful signature check";
                 }
+
+                stringBuilder.append("Successfully signed!");
 
                 Iterator<?> userIds = publicKey.getUserIDs();
                 while (userIds.hasNext()) {
@@ -155,13 +161,13 @@ public class ReadPGPMessage {
                 }
             }
 
-            return Optional.of(stringBuilder.toString());
+            return stringBuilder.toString();
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        return Optional.of("Error");
+        return "Unknown error!!";
 
 
 
