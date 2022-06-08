@@ -3,12 +3,11 @@ package etf.openpgp.su182095dvv180421d;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
 import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
-import etf.openpgp.su182095dvv180421d.views.KeyGenerate;
-import etf.openpgp.su182095dvv180421d.views.KeysStoreLoad;
-import etf.openpgp.su182095dvv180421d.views.PrivateKeyRingView;
-import etf.openpgp.su182095dvv180421d.views.PublicKeyRingView;
+import etf.openpgp.su182095dvv180421d.views.*;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,17 +44,19 @@ public class MainFrame extends JFrame {
         });
 
         jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PrivateKeyRingView(this));
-        jTabbedPane.addTab("Pregled prstena privatenih kljuceva", new PublicKeyRingView());
+        jTabbedPane.addTab("Pregled prstena javnih kljuceva", new PublicKeyRingView());
 
         JPanel keysLoadStoreGenerate = new JPanel(new GridLayout(1, 2));
         keysLoadStoreGenerate.add(new KeysStoreLoad(
                 publicKey -> PublicKeyRing.getInstance().addKey(publicKey),
                 secretKey -> PrivateKeyRing.getInstance().addKey(secretKey),
-                () -> PublicKeyRing.getInstance().getAllKeys().toArray(new PGPPublicKey[0]),
-                () -> PrivateKeyRing.getInstance().getAllKeys().toArray(new PGPSecretKey[0])
+                () -> PublicKeyRing.getInstance().getAllKeys().toArray(new PGPPublicKeyRing[0]),
+                () -> PrivateKeyRing.getInstance().getAllKeys().toArray(new PGPSecretKeyRing[0])
         ));
         keysLoadStoreGenerate.add(new KeyGenerate());
         jTabbedPane.addTab("Manipulisanje kljucevima", keysLoadStoreGenerate);
+        jTabbedPane.addTab("Generisanje poruke", new CreatePGPMessage());
+        jTabbedPane.addTab("Citanje poruke", new ReadMessageView());
     }
 
     public static void main(String[] args) {

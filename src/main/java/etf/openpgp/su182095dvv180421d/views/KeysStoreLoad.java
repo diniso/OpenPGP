@@ -1,57 +1,57 @@
 package etf.openpgp.su182095dvv180421d.views;
 
 import etf.openpgp.su182095dvv180421d.model.*;
-import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.*;
-import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Supplier;
 
 public class KeysStoreLoad extends JPanel {
 
     static class PGPPrivateKeyComboBox {
-        PGPSecretKey pgpSecretKey;
+        PGPSecretKeyRing pgpSecretKey;
 
-        public PGPPrivateKeyComboBox(PGPSecretKey pgpSecretKey) {
+        public PGPPrivateKeyComboBox(PGPSecretKeyRing pgpSecretKey) {
             this.pgpSecretKey = pgpSecretKey;
         }
 
         @Override
         public String toString() {
-            Iterator<String> userIDs = pgpSecretKey.getUserIDs();
+            PGPSecretKey masterPGPSecretKey = Utils.getMasterPGPSecretKey(pgpSecretKey);
+            Iterator<String> userIDs = masterPGPSecretKey.getUserIDs();
             if (userIDs.hasNext()) {
-                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPrivateKeyIdBase64(pgpSecretKey), userIDs.next());
+                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPrivateKeyIdBase64(masterPGPSecretKey), userIDs.next());
             }
-            return "ID: %s".formatted(Utils.getPGPPrivateKeyIdBase64(pgpSecretKey));
+            return "ID: %s".formatted(Utils.getPGPPrivateKeyIdBase64(masterPGPSecretKey));
         }
     }
 
-//    static class PGPPublicKeyComboBox {
-//        PGPPublicKey pgpPublicKey;
-//
-//        public PGPPublicKeyComboBox(PGPPublicKey pgpPublicKey) {
-//            this.pgpPublicKey = pgpPublicKey;
-//        }
-//
-//        @Override
-//        public String toString() {
-//            Iterator<String> userIDs = pgpPublicKey.getUserIDs();
-//            if (userIDs.hasNext()) {
-//                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey), userIDs.next());
-//            }
-//            return "ID: %s".formatted(Utils.getPGPPublicKeyIdBase64(pgpPublicKey));
-//        }
-//    }
+    static class PGPPublicKeyComboBox {
+        PGPPublicKeyRing pgpPublicKey;
 
-    public KeysStoreLoad(Callback<PGPPublicKey> publicKeyAction, Callback<PGPSecretKey> secretKeyAction, Supplier<PGPPublicKey[]> publicKeysSupplier, Supplier<PGPSecretKey[]> secretKeysSupplier) {
+        public PGPPublicKeyComboBox(PGPPublicKeyRing pgpPublicKey) {
+            this.pgpPublicKey = pgpPublicKey;
+        }
+
+        @Override
+        public String toString() {
+            PGPPublicKey masterPGPPublicKey = Utils.getMasterPGPPublicKey(pgpPublicKey);
+            Iterator<String> userIDs = masterPGPPublicKey.getUserIDs();
+            if (userIDs.hasNext()) {
+                return "ID: %s, Korisnik: %s".formatted(Utils.getPGPPublicKeyIdBase64(masterPGPPublicKey), userIDs.next());
+            }
+            return "ID: %s".formatted(Utils.getPGPPublicKeyIdBase64(masterPGPPublicKey));
+        }
+    }
+
+    public KeysStoreLoad(Callback<PGPPublicKeyRing> publicKeyAction, Callback<PGPSecretKeyRing> secretKeyAction, Supplier<PGPPublicKeyRing[]> publicKeysSupplier, Supplier<PGPSecretKeyRing[]> secretKeysSupplier) {
         super(new BorderLayout());
 
         JPanel centerPanel = new JPanel(new GridLayout(2, 1));
@@ -106,8 +106,10 @@ public class KeysStoreLoad extends JPanel {
                     if (openDialog == JFileChooser.APPROVE_OPTION) {
                         File selectedFile = fileChooser.getSelectedFile();
                         try {
-                            PGPPublicKey publicKey = LoadStoreKeys.readPublicKey(selectedFile.getAbsolutePath());
-                            publicKeyAction.callback(publicKey);
+                            ArrayList<PGPPublicKeyRing> publicKeys = LoadStoreKeys.readPublicKeys(selectedFile.getAbsolutePath());
+                            for (PGPPublicKeyRing publicKey : publicKeys) {
+                                publicKeyAction.callback(publicKey);
+                            }
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }
@@ -119,8 +121,10 @@ public class KeysStoreLoad extends JPanel {
                     if (openDialog == JFileChooser.APPROVE_OPTION) {
                         File selectedFile = fileChooser.getSelectedFile();
                         try {
-                            PGPSecretKey secretKey = LoadStoreKeys.readSecretKey(selectedFile.getAbsolutePath());
-                            secretKeyAction.callback(secretKey);
+                            ArrayList<PGPSecretKeyRing> secretKeys = LoadStoreKeys.readSecretKeys(selectedFile.getAbsolutePath());
+                            for (PGPSecretKeyRing secretKey : secretKeys) {
+                                secretKeyAction.callback(secretKey);
+                            }
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }
@@ -139,7 +143,7 @@ public class KeysStoreLoad extends JPanel {
                         File selectedFile = fileChooser.getSelectedFile();
                         try {
                             PGPPrivateKeyComboBox privateKeyComboBox = (PGPPrivateKeyComboBox) privateKeyJComboBox.getSelectedItem();
-                            LoadStoreKeys.storePublicKey(privateKeyComboBox.pgpSecretKey.getPublicKey(), selectedFile.getAbsolutePath());
+                            LoadStoreKeys.storePublicKey(Utils.getPublicKeysFromSecretKeyRing(privateKeyComboBox.pgpSecretKey), selectedFile.getAbsolutePath());
                         } catch (Exception e) {
                             JOptionPane.showMessageDialog(KeysStoreLoad.this, e.getLocalizedMessage(), "Greska", JOptionPane.ERROR_MESSAGE);
                         }

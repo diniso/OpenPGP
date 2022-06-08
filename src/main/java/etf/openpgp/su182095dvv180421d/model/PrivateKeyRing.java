@@ -1,37 +1,49 @@
 package etf.openpgp.su182095dvv180421d.model;
 
 import etf.openpgp.su182095dvv180421d.Config;
-import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 import java.io.*;
-import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class PrivateKeyRing extends KeyRing<PGPSecretKey> implements Serializable {
+public class PrivateKeyRing extends KeyRing<PGPSecretKeyRing> implements Serializable {
 
-    List<PGPSecretKey> privateKeys = new ArrayList<>();
+    List<PGPSecretKeyRing> privateKeys = new ArrayList<>();
 
-    public PGPSecretKey getKey(long keyId) {
-        for (PGPSecretKey pk: privateKeys) {
-            if (pk.getKeyID() == keyId) return pk;
+    public PGPSecretKeyRing getKey(long keyId) {
+        for (PGPSecretKeyRing pk: privateKeys) {
+            if (Utils.getMasterPGPSecretKey(pk).getKeyID() == keyId) return pk;
         }
         return null;
     }
 
-    public List<PGPSecretKey> getAllKeys() {
+    public PGPSecretKey getEncryptionKey(long keyId) {
+        for (PGPSecretKeyRing pk: privateKeys) {
+            try {
+                PGPSecretKey encryptionPGPSecretKey = Utils.getEncryptionPGPSecretKey(pk);
+                if (encryptionPGPSecretKey.getKeyID() == keyId) {
+                    return encryptionPGPSecretKey;
+                }
+            } catch (Exception ignored) {
+
+            }
+        }
+        return null;
+    }
+
+    public List<PGPSecretKeyRing> getAllKeys() {
         return privateKeys;
     }
 
-    public void addKey(PGPSecretKey key) {
+    public void addKey(PGPSecretKeyRing key) {
         this.privateKeys.add(key);
         notifyObservers(privateKeys);
     }
 
-    public void removeKey(PGPSecretKey key) {
+    public void removeKey(PGPSecretKeyRing key) {
         this.privateKeys.remove(key);
         notifyObservers(privateKeys);
     }
@@ -72,7 +84,9 @@ public class PrivateKeyRing extends KeyRing<PGPSecretKey> implements Serializabl
 
         for (String filename: filenames) {
             try {
-                singleton.addKey(LoadStoreKeys.readSecretKey(f.getAbsolutePath() + File.separator + filename));
+                for (PGPSecretKeyRing secretKey : LoadStoreKeys.readSecretKeys(f.getAbsolutePath() + File.separator + filename)) {
+                    singleton.addKey(secretKey);
+                }
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -102,7 +116,7 @@ public class PrivateKeyRing extends KeyRing<PGPSecretKey> implements Serializabl
 
             for (String filename: filenames) {
                 try {
-                    LoadStoreKeys.readSecretKey(f.getAbsolutePath() + File.separator + filename);
+                    LoadStoreKeys.readSecretKeys(f.getAbsolutePath() + File.separator + filename);
                     new File(f.getAbsolutePath() + File.separator + filename).delete();
                 } catch (Exception e) {
                     System.out.println("There is file other then .asc in PrivateKeyRing subfolder and couldn't delete it");
@@ -117,7 +131,7 @@ public class PrivateKeyRing extends KeyRing<PGPSecretKey> implements Serializabl
             }
         }
 
-        for (PGPSecretKey sk: singleton.privateKeys) {
+        for (PGPSecretKeyRing sk: singleton.privateKeys) {
             String filename = "" + new Date().getTime() + ".asc";
             try {
                 LoadStoreKeys.storeSecretKey(sk, f.getAbsolutePath() + File.separator + filename );

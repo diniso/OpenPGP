@@ -12,13 +12,14 @@ import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.*;
-import org.bouncycastle.util.encoders.Base64;
 
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Locale;
 
 public class Utils {
@@ -65,5 +66,75 @@ public class Utils {
         JPanel wrapper = new JPanel(layoutManager);
         wrapper.add(component);
         return wrapper;
+    }
+
+    public static boolean isPasswordCorrectForSecretKey(PGPSecretKey pgpSecretKey, String password) {
+        try {
+            decryptSecretKey(pgpSecretKey, password);
+            return true;
+        } catch (PGPException e) {
+            return false;
+        }
+    }
+
+    public static PGPSecretKey getMasterPGPSecretKey(PGPSecretKeyRing pgpSecretKeyRing) {
+        Iterator<PGPSecretKey> secretKeys = pgpSecretKeyRing.getSecretKeys();
+        while (secretKeys.hasNext()) {
+            PGPSecretKey secretKey = secretKeys.next();
+            if (secretKey.isMasterKey()) {
+                return secretKey;
+            }
+        }
+        throw new IllegalArgumentException("PGP Secret key ring ne poseduje master kljuc");
+    }
+
+    public static PGPPublicKey getMasterPGPPublicKey(PGPPublicKeyRing pgpPublicKeyRing) {
+        Iterator<PGPPublicKey> publicKeys = pgpPublicKeyRing.getPublicKeys();
+        while (publicKeys.hasNext()) {
+            PGPPublicKey publicKey = publicKeys.next();
+            if (publicKey.isMasterKey()) {
+                return publicKey;
+            }
+        }
+        throw new IllegalArgumentException("PGP Public key ring ne poseduje master kljuc");
+    }
+
+    public static PGPPublicKeyRing getPublicKeysFromSecretKeyRing(PGPSecretKeyRing pgpSecretKey) {
+        ArrayList<PGPPublicKey> list = new ArrayList<>();
+
+        Iterator<PGPPublicKey> publicKeys = pgpSecretKey.getPublicKeys();
+        while (publicKeys.hasNext()) {
+            PGPPublicKey pub = publicKeys.next();
+            list.add(pub);
+        }
+        publicKeys = pgpSecretKey.getExtraPublicKeys();
+        while (publicKeys.hasNext()) {
+            PGPPublicKey pub = publicKeys.next();
+            list.add(pub);
+        }
+
+        return new PGPPublicKeyRing(list);
+    }
+
+    public static PGPPublicKey getEncryptionPGPPublicKey(PGPPublicKeyRing pgpPublicKeys) {
+        Iterator<PGPPublicKey> publicKeys = pgpPublicKeys.getPublicKeys();
+        while (publicKeys.hasNext()) {
+            PGPPublicKey publicKey = publicKeys.next();
+            if (publicKey.isEncryptionKey()) {
+                return publicKey;
+            }
+        }
+        throw new IllegalArgumentException("PGP Public key ring ne poseduje kljuc za enkripciju");
+    }
+
+    public static PGPSecretKey getEncryptionPGPSecretKey(PGPSecretKeyRing pgpSecretKeys) {
+        Iterator<PGPSecretKey> secretKeys = pgpSecretKeys.getSecretKeys();
+        while (secretKeys.hasNext()) {
+            PGPSecretKey secretKey = secretKeys.next();
+            if (!secretKey.isSigningKey()) {
+                return secretKey;
+            }
+        }
+        throw new IllegalArgumentException("PGP Secret key ring ne poseduje kljuc za dekripciju");
     }
 }

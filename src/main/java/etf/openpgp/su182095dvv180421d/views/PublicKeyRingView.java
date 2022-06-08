@@ -5,6 +5,7 @@ import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
 import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
 import etf.openpgp.su182095dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.util.encoders.Base64;
@@ -18,7 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
 
-public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublicKey>> {
+public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublicKeyRing>> {
 
     private JTable table;
     private final JScrollPane sp;
@@ -70,13 +71,13 @@ public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublic
         this.add(panel, BorderLayout.NORTH);
     }
 
-    public void setData(List<PGPPublicKey> pks) {
+    public void setData(List<PGPPublicKeyRing> pks) {
         if (table != null) this.sp.remove(table);
 
         String[][] data = new String[pks.size()][8];
         String[] column = {"Timestamp", "Key ID", "Public key", "User Id", "Owner trust", "Key Legitimacy", "Signatures", "Signatures Trust"};
         for (int i = 0; i < pks.size(); i++) {
-            PGPPublicKey pk = pks.get(i);
+            PGPPublicKey pk = Utils.getMasterPGPPublicKey(pks.get(i));
 
             data[i][0] = new SimpleDateFormat("yyyy-MM-dd hh:mm").format(pk.getCreationTime());
             data[i][1] = Utils.getPGPPublicKeyIdBase64(pk);
@@ -130,7 +131,7 @@ public class PublicKeyRingView extends JPanel implements Observer<List<PGPPublic
     }
 
     @Override
-    public void observableChanged(List<PGPPublicKey> pks) {
+    public void observableChanged(List<PGPPublicKeyRing> pks) {
         setData(pks);
     }
 }

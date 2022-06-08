@@ -6,6 +6,7 @@ import etf.openpgp.su182095dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,9 +21,9 @@ public class DeletePrivateKeyDialog extends JDialog {
     private JTextField textField = new JTextField();
     private JButton button = new JButton("Delete");
 
-    public DeletePrivateKeyDialog(JFrame parentFrame , PGPSecretKey sk) {
+    public DeletePrivateKeyDialog(JFrame parentFrame , PGPSecretKeyRing skRing) {
         super(parentFrame, "Delete private key", true);
-        this.sk = sk;
+        this.sk = Utils.getMasterPGPSecretKey(skRing);
 
         this.setLayout(new BorderLayout());
 
@@ -45,7 +46,7 @@ public class DeletePrivateKeyDialog extends JDialog {
                 PGPPrivateKey pk = Utils.decryptSecretKey(sk , password);
                 // remove key
 
-                PrivateKeyRing.getInstance().removeKey(sk);
+                PrivateKeyRing.getInstance().removeKey(skRing);
 
                 // close dialog
                 DeletePrivateKeyDialog.this.setVisible(false);
