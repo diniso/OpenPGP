@@ -1,6 +1,6 @@
-package etf.openpgp.su182095dvv180421d.views;
+package etf.openpgp.su180295dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.*;
+import etf.openpgp.su180295dvv180421d.model.*;
 import org.bouncycastle.openpgp.*;
 
 import javax.swing.*;

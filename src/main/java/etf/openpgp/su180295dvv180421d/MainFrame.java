@@ -1,12 +1,10 @@
-package etf.openpgp.su182095dvv180421d;
+package etf.openpgp.su180295dvv180421d;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
-import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
-import etf.openpgp.su182095dvv180421d.views.*;
-import org.bouncycastle.openpgp.PGPPublicKey;
+import etf.openpgp.su180295dvv180421d.model.PrivateKeyRing;
+import etf.openpgp.su180295dvv180421d.model.PublicKeyRing;
+import etf.openpgp.su180295dvv180421d.views.*;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 import javax.swing.*;

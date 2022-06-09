@@ -1,8 +1,8 @@
-package etf.openpgp.su182095dvv180421d.views;
+package etf.openpgp.su180295dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.Config;
-import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
-import etf.openpgp.su182095dvv180421d.model.Utils;
+import etf.openpgp.su180295dvv180421d.Config;
+import etf.openpgp.su180295dvv180421d.model.PrivateKeyRing;
+import etf.openpgp.su180295dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -10,8 +10,6 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 
 public class DeletePrivateKeyDialog extends JDialog {

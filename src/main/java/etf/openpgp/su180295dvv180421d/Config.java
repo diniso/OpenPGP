@@ -1,4 +1,4 @@
-package etf.openpgp.su182095dvv180421d;
+package etf.openpgp.su180295dvv180421d;
 
 public class Config {
     public static final int FRAME_WIDTH = 900;

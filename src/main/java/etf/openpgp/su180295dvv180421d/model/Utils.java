@@ -1,6 +1,6 @@
-package etf.openpgp.su182095dvv180421d.model;
+package etf.openpgp.su180295dvv180421d.model;
 
-import etf.openpgp.su182095dvv180421d.Config;
+import etf.openpgp.su180295dvv180421d.Config;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.bcpg.sig.Features;
@@ -15,6 +15,7 @@ import org.bouncycastle.openpgp.operator.bc.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -136,5 +137,36 @@ public class Utils {
             }
         }
         throw new IllegalArgumentException("PGP Secret key ring ne poseduje kljuc za dekripciju");
+    }
+
+    public static PGPSecretKey getPGPSecretKeyFromFIle(String filename) throws Exception {
+        try {
+            PGPObjectFactory pgpF = new PGPObjectFactory(
+                    PGPUtil.getDecoderStream(new FileInputStream(filename)),
+                    new BcKeyFingerprintCalculator());
+
+
+            Object o = pgpF.nextObject();
+
+            if (!(o instanceof PGPEncryptedDataList)) return null;
+
+            PGPEncryptedDataList enc = (PGPEncryptedDataList) o;
+
+            Iterator<PGPEncryptedData> it = enc.getEncryptedDataObjects();
+            if (!it.hasNext()) {
+                return null;
+            }
+            while (it.hasNext()) {
+                PGPEncryptedData pbe = it.next();
+
+                PGPSecretKey sk = PrivateKeyRing.getInstance().getEncryptionKey(((PGPPublicKeyEncryptedData) pbe).getKeyID());
+
+                if (sk != null) return sk;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        throw new Exception("No key found");
     }
 }

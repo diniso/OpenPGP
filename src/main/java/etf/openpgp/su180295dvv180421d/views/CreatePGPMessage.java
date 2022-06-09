@@ -1,13 +1,12 @@
-package etf.openpgp.su182095dvv180421d.views;
+package etf.openpgp.su180295dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.PGPMessageFactory;
-import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
-import etf.openpgp.su182095dvv180421d.model.PublicKeyRing;
-import etf.openpgp.su182095dvv180421d.model.Utils;
+import etf.openpgp.su180295dvv180421d.model.PGPMessageFactory;
+import etf.openpgp.su180295dvv180421d.model.PrivateKeyRing;
+import etf.openpgp.su180295dvv180421d.model.PublicKeyRing;
+import etf.openpgp.su180295dvv180421d.model.Utils;
 import org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.examples.SignedFileProcessor;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;

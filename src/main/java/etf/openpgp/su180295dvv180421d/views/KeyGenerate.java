@@ -1,7 +1,7 @@
-package etf.openpgp.su182095dvv180421d.views;
+package etf.openpgp.su180295dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.PrivateKeyRing;
-import etf.openpgp.su182095dvv180421d.model.Utils;
+import etf.openpgp.su180295dvv180421d.model.PrivateKeyRing;
+import etf.openpgp.su180295dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;

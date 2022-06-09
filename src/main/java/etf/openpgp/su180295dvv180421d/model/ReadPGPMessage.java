@@ -1,52 +1,13 @@
-package etf.openpgp.su182095dvv180421d.model;
+package etf.openpgp.su180295dvv180421d.model;
 
 import org.bouncycastle.openpgp.*;
-import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
-import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory;
 import org.bouncycastle.openpgp.operator.bc.*;
-import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyDataDecryptorFactoryBuilder;
 import org.bouncycastle.util.io.Streams;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.SignatureException;
 import java.util.Iterator;
-import java.util.Optional;
 
 public class ReadPGPMessage {
-
-    public static PGPSecretKey getPGPSecretKeyFromFIle(String filename) throws Exception {
-        try {
-            PGPObjectFactory pgpF = new PGPObjectFactory(
-                    PGPUtil.getDecoderStream(new FileInputStream(filename)),
-                    new BcKeyFingerprintCalculator());
-
-
-            Object o = pgpF.nextObject();
-
-            if (!(o instanceof PGPEncryptedDataList)) return null;
-
-            PGPEncryptedDataList enc = (PGPEncryptedDataList) o;
-
-            Iterator<PGPEncryptedData> it = enc.getEncryptedDataObjects();
-            if (!it.hasNext()) {
-                return null;
-            }
-            while (it.hasNext()) {
-                PGPEncryptedData pbe = it.next();
-
-                PGPSecretKey sk = PrivateKeyRing.getInstance().getEncryptionKey(((PGPPublicKeyEncryptedData) pbe).getKeyID());
-
-                if (sk != null) return sk;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        throw new Exception("No key found");
-    }
 
     public static String decryptAndVerify(
             String decryptedFileName,

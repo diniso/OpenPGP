@@ -1,12 +1,12 @@
-package etf.openpgp.su182095dvv180421d.views;
+package etf.openpgp.su180295dvv180421d.views;
 
-import etf.openpgp.su182095dvv180421d.model.ReadPGPMessage;
+import etf.openpgp.su180295dvv180421d.model.ReadPGPMessage;
+import etf.openpgp.su180295dvv180421d.model.Utils;
 import org.bouncycastle.openpgp.PGPSecretKey;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.util.Optional;
 
 public class ReadMessageView extends JPanel {
 
@@ -18,7 +18,7 @@ public class ReadMessageView extends JPanel {
     private String selectedFile;
     private String savedFile;
 
-    private JButton choseOutputFileButton = new JButton("Output file");
+    private final JButton choseOutputFileButton = new JButton("Output file");
 
  //   private static final String savedFile = "encrypted.asc";
 
@@ -38,7 +38,7 @@ public class ReadMessageView extends JPanel {
                 selectedFile = fileChooser.getSelectedFile().getAbsolutePath();
 
                 try {
-                    PGPSecretKey sk = ReadPGPMessage.getPGPSecretKeyFromFIle(selectedFile);
+                    PGPSecretKey sk = Utils.getPGPSecretKeyFromFIle(selectedFile);
                     disableTop();
                     if (sk != null) {
                         enableMiddle(true);
