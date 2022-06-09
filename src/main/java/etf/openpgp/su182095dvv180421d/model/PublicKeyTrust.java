@@ -12,9 +12,6 @@ public class PublicKeyTrust {
     }
 
     public static boolean getSignatureTrust(PGPPublicKey pk) {
-        if (pk.getTrustData() == null) return false;
-
-
         return false;
     }
 
